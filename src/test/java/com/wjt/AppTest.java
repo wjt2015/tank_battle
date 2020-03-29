@@ -39,14 +39,14 @@ public class AppTest
     public void testApp() {
         assertTrue(true);
     }
-*/
+
     @Test
     public void tank1() {
         Tank tank = new Tank();
         tank.lauchFrame();
         log.info("tank finish!tank={};", tank);
     }
-
+*/
 
 
 }
