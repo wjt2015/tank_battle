@@ -1,5 +1,6 @@
 package com.wjt;
 
+import com.wjt.common.Constants;
 import com.wjt.model.Tank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,13 +14,14 @@ public class App {
 
     public static void main(String[] args) {
         tank1();
-        System.out.println("Hello World!");
+        log.info("Hello World!");
     }
 
 
     public static void tank1() {
         Tank tank = new Tank();
-        tank.lauchFrame();
+        //new Thread(tank).start();
+        Constants.THREAD_POOL_EXECUTOR.submit(tank);
         log.info("tank finish!tank={}!", tank);
     }
 
