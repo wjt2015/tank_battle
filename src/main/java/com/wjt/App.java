@@ -20,7 +20,7 @@ public class App {
     public static void tank1() {
         Tank tank = new Tank();
         tank.lauchFrame();
-        log.info("tank finish!tank={};", tank);
+        log.info("tank finish!tank={}!", tank);
     }
 
 
