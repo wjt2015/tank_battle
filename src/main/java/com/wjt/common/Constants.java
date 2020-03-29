@@ -1,7 +1,5 @@
 package com.wjt.common;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -10,6 +8,12 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * @Description
  */
 public interface Constants {
+    //最初的坦克位置(INIT_X,INIT_Y);
+    int INIT_X = 0;
+    int INIT_Y = 0;
+    //坦克的速度大小;
+    int XV = 10;
+    int YV = 10;
 
     ScheduledThreadPoolExecutor THREAD_POOL_EXECUTOR=new ScheduledThreadPoolExecutor(10);
 

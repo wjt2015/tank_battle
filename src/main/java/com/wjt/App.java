@@ -1,7 +1,7 @@
 package com.wjt;
 
 import com.wjt.common.Constants;
-import com.wjt.model.Tank;
+import com.wjt.model.TankClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +19,9 @@ public class App {
 
 
     public static void tank1() {
-        Tank tank = new Tank();
-        Constants.THREAD_POOL_EXECUTOR.submit(tank);
-        log.info("tank finish!tank={}!", tank);
+        TankClient tankClient = new TankClient();
+        Constants.THREAD_POOL_EXECUTOR.submit(tankClient);
+        log.info("tankClient finish!tankClient={}!", tankClient);
     }
 
 
