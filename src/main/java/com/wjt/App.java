@@ -20,7 +20,6 @@ public class App {
 
     public static void tank1() {
         Tank tank = new Tank();
-        //new Thread(tank).start();
         Constants.THREAD_POOL_EXECUTOR.submit(tank);
         log.info("tank finish!tank={}!", tank);
     }
