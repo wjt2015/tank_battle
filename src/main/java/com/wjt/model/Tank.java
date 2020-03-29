@@ -1,10 +1,14 @@
 package com.wjt.model;
 
 import com.wjt.common.Constants;
+import com.wjt.common.Direction;
 import lombok.extern.slf4j.Slf4j;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Time 2020/3/29/22:46
@@ -15,45 +19,98 @@ import java.awt.event.KeyEvent;
 public class Tank {
     public volatile int x, y;
     public volatile int xv, yv;
-    public volatile int length = 30, width = 30;
+    /**
+     * 坦克大小;
+     */
+    public volatile int length, width;
+
     public volatile Color color;
+    public volatile Direction direction;
 
+    /**
+     * 边界;
+     */
+    public volatile Rectangle rect;
 
-    public Tank() {
+    /**
+     * 炮弹容器;
+     */
+    //public static final ConcurrentSkipListSet<Missile> MISSILES = new ConcurrentSkipListSet<>();
+    public static final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
+
+    public Tank(Rectangle rect) {
         x = Constants.INIT_X;
         y = Constants.INIT_Y;
-        xv = Constants.XV;
-        yv = Constants.YV;
-        length = 30;
-        width = 30;
+        xv = 0;
+        yv = 0;
+        length = Constants.TANK_LENGTH;
+        width = Constants.TANK_WIDTH;
         color = Color.RED;
+        direction = Direction.BOTTOM;
+        this.rect = rect;
+    }
+
+    public Tank(int x, int y, int xv, int yv, Color color, Rectangle rect) {
+        this.x = x;
+        this.y = y;
+        this.xv = xv;
+        this.yv = yv;
+        length = Constants.TANK_LENGTH;
+        width = Constants.TANK_WIDTH;
+        this.color = color;
+        direction = Direction.BOTTOM;
+        this.rect = rect;
     }
 
     public void draw(Graphics2D g2d) {
+        //绘制坦克;
         Color oldColor = g2d.getColor();
         g2d.setColor(color);
         g2d.fillOval(x, y, length, width);
         g2d.setColor(oldColor);
+        //绘制炮弹;
+        for (Missile missile : MISSILES.keySet()) {
+            missile.move();
+            missile.draw(g2d);
+        }
     }
 
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
         if (keyCode == KeyEvent.VK_W) {
-            yv = -Constants.YV;
-        } else if (keyCode == KeyEvent.VK_S) {
-            yv = Constants.YV;
+            if (yv >= 0) {
+                yv -= Constants.YV;
+            }
+            this.direction = Direction.UPPER;
         } else if (keyCode == KeyEvent.VK_A) {
-            xv = -Constants.XV;
+            if (xv >= 0) {
+                xv -= Constants.XV;
+            }
+            this.direction = Direction.LEFT;
+        } else if (keyCode == KeyEvent.VK_S) {
+            if (yv <= 0) {
+                yv += Constants.YV;
+            }
+            this.direction = Direction.BOTTOM;
         } else if (keyCode == KeyEvent.VK_D) {
-            xv = Constants.XV;
+            if (xv <= 0) {
+                xv += Constants.XV;
+            }
+            this.direction = Direction.RIGHT;
+        } else if (keyCode == KeyEvent.VK_J) {
+            //发射炮弹;
+            int missileX = (x + (this.length >> 1)), missileY = (y + (this.width >> 1));
+            new Missile(missileX, missileY, this.direction, MISSILES, this.rect);
         }
-        log.info("this={};keyPressed;e={};keyCode={};xv={};yv={};", this, e, keyCode, xv, yv);
+        log.info("keyPressed;this={};e={};xv={};yv={};this.direction={};", this, e, xv, yv, this.direction);
     }
 
-    /**
-     * @param rect 边界;
-     */
-    public void move(Rectangle rect) {
+    public void keyReleased(KeyEvent e) {
+
+    }
+
+
+    public void move() {
         x += xv;
         y += yv;
         //防止越界;
@@ -63,6 +120,5 @@ public class Tank {
         y = (y < upper ? upper : y);
         y = (y > bottom ? bottom : y);
     }
-
 
 }
