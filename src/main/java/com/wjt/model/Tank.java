@@ -5,6 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
@@ -17,14 +21,22 @@ import java.awt.image.BufferedImage;
 @Slf4j
 public class Tank extends JFrame implements Runnable {
 
-
-    public volatile int x = 20;
-    public volatile int y = 20;
-    public volatile int xv = 10;
-    public volatile int yv = 10;
+    public volatile int x = INIT_X;
+    public volatile int y = INIT_Y;
+    public volatile int xv = 0;
+    public volatile int yv = 0;
     public int width = 800;
     public int height = 600;
     public int interval = 30;
+
+    /**
+     * 最初的坦克位置(INIT_X,INIT_Y);
+     */
+    public static final int INIT_X = 0;
+    public static final int INIT_Y = 0;
+
+    public static final int XV = 10;
+    public static final int YV = 10;
     /**
      * 双缓冲用的虚拟图片;
      */
@@ -51,11 +63,11 @@ public class Tank extends JFrame implements Runnable {
     }
 
     public Tank() {
-        setLocation(400, 300);
-        setSize(800, 600);
+        setLocation(INIT_X, INIT_Y);
+        setSize(width, height);
         setTitle("tankWar");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(false);
+        //setResizable(false);
         addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {
@@ -94,29 +106,83 @@ public class Tank extends JFrame implements Runnable {
 
             }
         });
+
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+                if (keyCode == KeyEvent.VK_W) {
+                    yv = -YV;
+                } else if (keyCode == KeyEvent.VK_S) {
+                    yv = YV;
+                } else if (keyCode == KeyEvent.VK_A) {
+                    xv = -XV;
+                } else if (keyCode == KeyEvent.VK_D) {
+                    xv = XV;
+                }
+                log.info("keyPressed;e={};keyCode={};xv={};yv={};", e, keyCode, xv, yv);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
+
+        addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                log.info("mouseXY=({},{});mouseXYOnScreen=({},{});clickCount={};",
+                        e.getX(), e.getY(), e.getXOnScreen(), e.getYOnScreen(), e.getClickCount());
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
         setVisible(true);
 
     }
 
     @Override
     public void run() {
-        while (x <= width) {
+        while (true) {
+            //log.info("tank position:({},{});", x, y);
+            if (x >= 0 && x <= width && y >= 0 && y <= height) {
+                x += xv;
+                y += yv;
 
-            repaint();
-            Utils.sleep(interval);
+                //防止越界;
+                x = (x < 0 ? 0 : x);
+                x = (x > width ? width : x);
+                y = (y < 0 ? 0 : y);
+                y = (y > height ? height : y);
 
-            if (yv > 0) {
-                if (y >= height) {
-                    yv = -yv;
-                    x += xv;
-                }
-            } else {
-                if (y <= 0) {
-                    yv = -yv;
-                    x += xv;
-                }
+                repaint();
+                Utils.sleep(interval);
             }
-            y += yv;
         }
     }
 }
