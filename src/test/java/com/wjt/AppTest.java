@@ -1,11 +1,7 @@
 package com.wjt;
 
-import com.wjt.model.Tank;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
 
 /**
  * Unit test for simple App.
@@ -42,7 +38,7 @@ public class AppTest
 
     @Test
     public void tank1() {
-        Tank tank = new Tank();
+        TankClient tank = new TankClient();
         tank.lauchFrame();
         log.info("tank finish!tank={};", tank);
     }
