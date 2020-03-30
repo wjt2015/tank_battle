@@ -2,18 +2,22 @@ package com.wjt.model;
 
 import com.wjt.common.Constants;
 import com.wjt.common.Direction;
+import com.wjt.common.PlayerType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @Time 2020/3/29/22:46
  * @Author jintao.wang
- * @Description
+ * @Description 玩家的坦克由玩家控制;敌人的坦克由系统自动控制,总是向玩家的方向运动,向玩家开炮,并能避开障碍物;
+ * 所有坦克的位置坐标的间距都是单步距离的整数倍;
  */
 @Slf4j
 public class Tank {
@@ -33,42 +37,57 @@ public class Tank {
     public volatile Rectangle rect;
 
 
-    public GunBarrel gunBarrel;
+    public volatile GunBarrel gunBarrel;
+
+    /**
+     * 所属玩家;
+     */
+    public PlayerType playerType;
+    /**
+     * 引用所有的坦克容器;
+     */
+    public final TankContainer tankContainer;
+
 
     /**
      * 炮弹容器;
      */
     //public static final ConcurrentSkipListSet<Missile> MISSILES = new ConcurrentSkipListSet<>();
-    public static final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
+    public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
 
-    public Tank(Rectangle rect) {
-        x = Constants.INIT_X;
-        y = Constants.INIT_Y;
+    public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer) {
+        this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer);
+    }
+
+    public Tank(int x, int y, Rectangle rect, PlayerType playerType, TankContainer tankContainer) {
+        this.x = x;
+        this.y = y;
         xv = 0;
         yv = 0;
         length = Constants.TANK_LENGTH;
         width = Constants.TANK_WIDTH;
-        color = Color.RED;
         direction = Direction.BOTTOM;
         this.rect = rect;
 
+        log.info("Before_GunBarrel;playerType={};", playerType);
         this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
 
+        this.playerType = playerType;
+
+        this.tankContainer = tankContainer;
+        if (this.playerType == PlayerType.PLAYER_D) {
+            //敌人坦克;
+            this.tankContainer.enemyTanks.put(this, Boolean.TRUE);
+            color = Color.YELLOW;
+        } else {
+            //玩家坦克;
+            this.tankContainer.playerTanks.put(this, Boolean.TRUE);
+            color = Color.RED;
+        }
+        //log.info("this.playerType={};this.tankContainer={};", this.playerType, this.tankContainer);
+        log.info("this.playerType={};this.color={};init_pos=({},{});", this.playerType, this.color, this.x, this.y);
     }
 
-    public Tank(int x, int y, int xv, int yv, Color color, Rectangle rect) {
-        this.x = x;
-        this.y = y;
-        this.xv = xv;
-        this.yv = yv;
-        length = Constants.TANK_LENGTH;
-        width = Constants.TANK_WIDTH;
-        this.color = color;
-        direction = Direction.BOTTOM;
-        this.rect = rect;
-
-        this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
-    }
 
     public void draw(Graphics2D g2d) {
         //绘制坦克;
@@ -86,31 +105,34 @@ public class Tank {
     }
 
     public void keyPressed(KeyEvent e) {
-        int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_W) {
-            if (yv >= 0) {
-                yv -= Constants.YV;
+        final int oldXv = xv, oldYv = yv;
+        if (this.playerType == PlayerType.PLAYER_A) {
+            int keyCode = e.getKeyCode();
+            if (keyCode == KeyEvent.VK_W) {
+                if (yv >= 0) {
+                    yv -= Constants.TANK_YV;
+                }
+                this.direction = Direction.UPPER;
+            } else if (keyCode == KeyEvent.VK_A) {
+                if (xv >= 0) {
+                    xv -= Constants.TANK_XV;
+                }
+                this.direction = Direction.LEFT;
+            } else if (keyCode == KeyEvent.VK_S) {
+                if (yv <= 0) {
+                    yv += Constants.TANK_YV;
+                }
+                this.direction = Direction.BOTTOM;
+            } else if (keyCode == KeyEvent.VK_D) {
+                if (xv <= 0) {
+                    xv += Constants.TANK_XV;
+                }
+                this.direction = Direction.RIGHT;
+            } else if (keyCode == KeyEvent.VK_J) {
+                fire();
             }
-            this.direction = Direction.UPPER;
-        } else if (keyCode == KeyEvent.VK_A) {
-            if (xv >= 0) {
-                xv -= Constants.XV;
-            }
-            this.direction = Direction.LEFT;
-        } else if (keyCode == KeyEvent.VK_S) {
-            if (yv <= 0) {
-                yv += Constants.YV;
-            }
-            this.direction = Direction.BOTTOM;
-        } else if (keyCode == KeyEvent.VK_D) {
-            if (xv <= 0) {
-                xv += Constants.XV;
-            }
-            this.direction = Direction.RIGHT;
-        } else if (keyCode == KeyEvent.VK_J) {
-            fire();
         }
-        log.info("keyPressed;this={};e={};xv={};yv={};this.direction={};", this, e, xv, yv, this.direction);
+        log.info("keyPressed;this.playerType={};this.color={};e={};oldV=({},{});newV=({},{});this.direction={};", this.playerType, this.color, e.getKeyChar(), oldXv, oldYv, xv, yv, this.direction);
     }
 
     /**
@@ -118,11 +140,15 @@ public class Tank {
      */
     public void fire() {
         int missileX = (x + (this.length >> 1)) - (Constants.MISSILE_LENGTH >> 1), missileY = (y + (this.width >> 1) - (Constants.MISSILE_WIDTH >> 1));
-        new Missile(missileX, missileY, this.direction, this, this.rect);
+        Color missileColor = (this.playerType == PlayerType.PLAYER_D ? Color.MAGENTA : Color.BLACK);
+        new Missile(missileX, missileY, this.direction, this, this.rect, missileColor);
     }
 
     public void keyReleased(KeyEvent e) {
-
+        if (this.playerType == PlayerType.PLAYER_A) {
+            //仅玩家坦克受控制;
+            this.xv = this.yv = 0;
+        }
     }
 
 
@@ -136,8 +162,86 @@ public class Tank {
         y = (y < upper ? upper : y);
         y = (y > bottom ? bottom : y);
         //移动炮管;
-        this.gunBarrel.move(x + (length >> 1), y + (length >> 1), this.direction);
+        this.gunBarrel.move(x + (length >> 1), y + (width >> 1), this.direction);
+        log.info("this.playerType={};this.color={};move_pos=({},{});", this.playerType, this.color, this.x, this.y);
 
     }
+
+    /**
+     * 销毁坦克;
+     */
+    public void destroy() {
+        if (playerType == PlayerType.PLAYER_D) {
+            this.tankContainer.enemyTanks.remove(this);
+        } else {
+            this.tankContainer.playerTanks.remove(this);
+        }
+    }
+
+    public void setSpeed() {
+        int size = this.tankContainer.playerTanks.size();
+        //增加随机性;
+        int t = Constants.RANDOM.nextInt(1501);
+        if (this.playerType == PlayerType.PLAYER_D && size >= 1 && (t > 131 && t < 160)) {
+            /**
+             * 只能自动设定敌人坦克的速度;
+             * 敌人的坦克由系统自动控制,总是向某一玩家的方向运动,向玩家开炮,并能避开障碍物;
+             */
+            int i = Math.abs(Constants.RANDOM.nextInt());
+
+            ArrayList<Tank> playerTanks = new ArrayList<>(this.tankContainer.playerTanks.keySet());
+            size = playerTanks.size();
+            //Tank[] playerTanks = this.tankContainer.playerTanks.keySet().stream().filter(o -> o != null).collect(Collectors.toSet()).toArray(new Tank[size]);
+
+            log.info("playerTanks={};tank_pos=({},{});", playerTanks, this.x, this.y);
+
+            if (size >= 1) {
+                //随机选择一个玩家坦克,并向它进攻;
+                Tank playerTank = playerTanks.get(i % size);
+
+                if (playerTank.x < this.x) {
+                    this.xv = -Constants.TANK_XV;
+
+                    if (playerTank.y < this.y) {
+                        this.direction = Direction.LEFT_UPPER;
+                        this.yv = -Constants.TANK_YV;
+                    } else if (playerTank.y == this.y) {
+                        this.direction = Direction.LEFT;
+                        this.yv = 0;
+                    } else {
+                        this.direction = Direction.LEFT_BOTTOM;
+                        this.yv = Constants.TANK_YV;
+                    }
+                } else if (playerTank.x == this.x) {
+                    this.xv = 0;
+
+                    if (playerTank.y < this.y) {
+                        this.direction = Direction.UPPER;
+                        this.yv = -Constants.TANK_YV;
+                    } else if (playerTank.y == this.y) {
+/*                        this.direction = Direction.LEFT;
+                        this.yv = 0;*/
+                    } else {
+                        this.direction = Direction.BOTTOM;
+                        this.yv = Constants.TANK_YV;
+                    }
+                } else {
+                    this.xv = Constants.TANK_XV;
+
+                    if (playerTank.y < this.y) {
+                        this.direction = Direction.RIGHT_UPPER;
+                        this.yv = -Constants.TANK_YV;
+                    } else if (playerTank.y == this.y) {
+                        this.direction = Direction.RIGHT;
+                        this.yv = 0;
+                    } else {
+                        this.direction = Direction.RIGHT_BOTTOM;
+                        this.yv = Constants.TANK_YV;
+                    }
+                }
+            }
+        }
+    }
+
 
 }
