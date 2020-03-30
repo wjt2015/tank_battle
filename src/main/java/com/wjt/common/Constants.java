@@ -46,6 +46,15 @@ public interface Constants {
      */
     LinkedHashSet<Missile> MISSILES = new LinkedHashSet<>(50);
 
+    /**
+     * 炮管长度;
+     */
+    int GUN_BARREL_LENGTH = 40;
+    /**
+     * 炮管宽度;
+     */
+    int GUN_BARREL_WIDTH=10;
+
     ScheduledThreadPoolExecutor THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(10);
 
 }

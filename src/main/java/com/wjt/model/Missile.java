@@ -27,23 +27,20 @@ public class Missile {
      * 边界;
      */
     public volatile Rectangle rect;
-    /**
-     * 炮弹容器;
-     */
-    public ConcurrentHashMap<Missile, Object> missiles;
 
+    public Tank tank;
 
-    public Missile(final int x, final int y, final Direction direction, ConcurrentHashMap<Missile, Object> missiles, Rectangle rect) {
+    public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect) {
         this.x = x;
         this.y = y;
         length = Constants.MISSILE_LENGTH;
         width = Constants.MISSILE_WIDTH;
-        color = Color.YELLOW;
+        color = Color.BLACK;
         setDirection(direction);
-        this.missiles = missiles;
-        this.missiles.put(this, Boolean.TRUE);
+        this.tank = tank;
+        this.tank.MISSILES.put(this, Boolean.TRUE);
         this.rect = rect;
-        log.info("missilePos=({},{});this.missiles={};direction={};this.rect={};", this.x, this.y, this.missiles, direction, this.rect);
+        log.info("missilePos=({},{});this.missiles={};direction={};this.rect={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
         //addMissileDestroyListener(missileDestroyListener);
     }
 
@@ -95,9 +92,9 @@ public class Missile {
     }
 
     public void destroy() {
-        log.info("before;this.missiles={};", this.missiles);
-        this.missiles.remove(this);
-        log.info("after;this.missiles={};", this.missiles);
+        log.info("before;this.missiles={};", this.tank.MISSILES);
+        this.tank.MISSILES.remove(this);
+        log.info("after;this.missiles={};", this.tank.MISSILES);
     }
 
     public void draw(Graphics2D g2d) {

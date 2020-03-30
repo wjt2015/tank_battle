@@ -32,6 +32,9 @@ public class Tank {
      */
     public volatile Rectangle rect;
 
+
+    public GunBarrel gunBarrel;
+
     /**
      * 炮弹容器;
      */
@@ -48,6 +51,9 @@ public class Tank {
         color = Color.RED;
         direction = Direction.BOTTOM;
         this.rect = rect;
+
+        this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
+
     }
 
     public Tank(int x, int y, int xv, int yv, Color color, Rectangle rect) {
@@ -60,6 +66,8 @@ public class Tank {
         this.color = color;
         direction = Direction.BOTTOM;
         this.rect = rect;
+
+        this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
     }
 
     public void draw(Graphics2D g2d) {
@@ -68,6 +76,8 @@ public class Tank {
         g2d.setColor(color);
         g2d.fillOval(x, y, length, width);
         g2d.setColor(oldColor);
+        //绘制炮管;
+        this.gunBarrel.draw(g2d);
         //绘制炮弹;
         for (Missile missile : MISSILES.keySet()) {
             missile.move();
@@ -98,11 +108,17 @@ public class Tank {
             }
             this.direction = Direction.RIGHT;
         } else if (keyCode == KeyEvent.VK_J) {
-            //发射炮弹;
-            int missileX = (x + (this.length >> 1)), missileY = (y + (this.width >> 1));
-            new Missile(missileX, missileY, this.direction, MISSILES, this.rect);
+            fire();
         }
         log.info("keyPressed;this={};e={};xv={};yv={};this.direction={};", this, e, xv, yv, this.direction);
+    }
+
+    /**
+     * 发射炮弹;
+     */
+    public void fire() {
+        int missileX = (x + (this.length >> 1)) - (Constants.MISSILE_LENGTH >> 1), missileY = (y + (this.width >> 1) - (Constants.MISSILE_WIDTH >> 1));
+        new Missile(missileX, missileY, this.direction, this, this.rect);
     }
 
     public void keyReleased(KeyEvent e) {
@@ -119,6 +135,9 @@ public class Tank {
         x = (x > right ? right : x);
         y = (y < upper ? upper : y);
         y = (y > bottom ? bottom : y);
+        //移动炮管;
+        this.gunBarrel.move(x + (length >> 1), y + (length >> 1), this.direction);
+
     }
 
 }
