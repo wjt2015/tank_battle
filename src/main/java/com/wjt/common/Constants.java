@@ -3,6 +3,7 @@ package com.wjt.common;
 import com.wjt.model.Missile;
 
 import java.util.LinkedHashSet;
+import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
@@ -11,16 +12,18 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * @Description
  */
 public interface Constants {
-    /**
-     * 最初默认的坦克位置(INIT_X,INIT_Y);
-     */
-    int INIT_X = 0;
-    int INIT_Y = 0;
+
     /**
      * 坦克的默认速度大小;
      */
-    int XV = 10;
-    int YV = 10;
+    int TANK_XV = 5;
+    int TANK_YV = 5;
+
+    /**
+     * 最初默认的坦克位置(INIT_X,INIT_Y);
+     */
+    int INIT_X = TANK_XV;
+    int INIT_Y = TANK_YV;
 
     /**
      * 坦克的默认大小;
@@ -53,7 +56,12 @@ public interface Constants {
     /**
      * 炮管宽度;
      */
-    int GUN_BARREL_WIDTH=10;
+    int GUN_BARREL_WIDTH = 10;
+
+    /**
+     * 随机整数发生器;
+     */
+    Random RANDOM = new Random();
 
     ScheduledThreadPoolExecutor THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(10);
 

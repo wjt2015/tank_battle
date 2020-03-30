@@ -66,8 +66,8 @@ public class GunBarrel {
                 xEnd = xStart - barrelLength;
                 yEnd = yStart + barrelLength;
                 break;
-
         }
+        log.info("gun_barrel;({},{})=>({},{});",xStart,yStart,xEnd,yEnd);
     }
 
 
@@ -77,7 +77,7 @@ public class GunBarrel {
 
         g2d.setColor(color);
         g2d.setStroke(this.stroke);
-        log.info("g2d={};this.stroke={};this.color={};", g2d, this.stroke, this.color);
+        //log.info("g2d={};this.stroke={};this.color={};", g2d, this.stroke, this.color);
         g2d.drawLine(xStart, yStart, xEnd, yEnd);
         g2d.setColor(oldColor);
         g2d.setStroke(oldStroke);

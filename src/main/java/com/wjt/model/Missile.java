@@ -40,7 +40,25 @@ public class Missile {
         this.tank = tank;
         this.tank.MISSILES.put(this, Boolean.TRUE);
         this.rect = rect;
-        log.info("missilePos=({},{});this.missiles={};direction={};this.rect={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
+        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
+        log.info("tank.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
+                tank.playerType, this.x, this.y, this.tank.MISSILES.size(), direction, this.rect);
+        //addMissileDestroyListener(missileDestroyListener);
+    }
+
+    public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect,Color color) {
+        this.x = x;
+        this.y = y;
+        length = Constants.MISSILE_LENGTH;
+        width = Constants.MISSILE_WIDTH;
+        this.color = color;
+        setDirection(direction);
+        this.tank = tank;
+        this.tank.MISSILES.put(this, Boolean.TRUE);
+        this.rect = rect;
+        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
+        log.info("tank.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
+                tank.playerType, this.x, this.y, this.tank.MISSILES.size(), direction, this.rect);
         //addMissileDestroyListener(missileDestroyListener);
     }
 
@@ -87,14 +105,15 @@ public class Missile {
         int left = rect.x, right = left + rect.width, upper = rect.y, bottom = upper + rect.height;
         //越界后炮弹的生命周期就结束;
         if (x < left || x > right || y < upper || y > bottom) {
+            log.info("missile_move;pos=({},{});rect=({},{}),({},{});", x, y, left, upper, right, bottom);
             destroy();
         }
     }
 
     public void destroy() {
-        log.info("before;this.missiles={};", this.tank.MISSILES);
+        log.info("before;tank.playerType={};missilePos=({},{});this.missiles.size={};", tank.playerType, this.x, this.y, this.tank.MISSILES.size());
         this.tank.MISSILES.remove(this);
-        log.info("after;this.missiles={};", this.tank.MISSILES);
+        log.info("after;tank.playerType={};missilePos=({},{});this.missiles.size={};", tank.playerType, this.x, this.y, this.tank.MISSILES.size());
     }
 
     public void draw(Graphics2D g2d) {

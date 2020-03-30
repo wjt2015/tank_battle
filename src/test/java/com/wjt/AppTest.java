@@ -1,5 +1,7 @@
 package com.wjt;
 
+import com.wjt.common.Constants;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,24 @@ public class AppTest
         log.info("tank finish!tank={};", tank);
     }
 */
+
+
+    @Test
+    public void random(){
+
+        int m=31, n=1000,less=0,more=0;
+        for (int i=0;i<n;i++){
+            int t=Constants.RANDOM.nextInt(771);
+            if(t<m){
+                less++;
+            }else {
+                more++;
+            }
+        }
+
+        log.info("less={};more={};",less,more);
+
+    }
 
 
 }
