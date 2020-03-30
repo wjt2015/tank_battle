@@ -53,13 +53,14 @@ public class Tank {
      * 炮弹容器;
      */
     //public static final ConcurrentSkipListSet<Missile> MISSILES = new ConcurrentSkipListSet<>();
-    public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
+    //public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
+    public final ConcurrentHashMap<Missile, Object> MISSILES;
 
-    public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer) {
-        this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer);
+    public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles) {
+        this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer, missiles);
     }
 
-    public Tank(int x, int y, Rectangle rect, PlayerType playerType, TankContainer tankContainer) {
+    public Tank(int x, int y, Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles) {
         this.x = x;
         this.y = y;
         xv = 0;
@@ -68,7 +69,7 @@ public class Tank {
         width = Constants.TANK_WIDTH;
         direction = Direction.BOTTOM;
         this.rect = rect;
-
+        this.MISSILES = missiles;
         log.info("Before_GunBarrel;playerType={};", playerType);
         this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
 
@@ -98,10 +99,10 @@ public class Tank {
         //绘制炮管;
         this.gunBarrel.draw(g2d);
         //绘制炮弹;
-        for (Missile missile : MISSILES.keySet()) {
+/*        for (Missile missile : MISSILES.keySet()) {
             missile.move();
             missile.draw(g2d);
-        }
+        }*/
     }
 
     public void keyPressed(KeyEvent e) {

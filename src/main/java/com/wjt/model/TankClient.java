@@ -17,6 +17,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -47,6 +48,11 @@ public class TankClient extends JFrame implements Runnable {
      */
     public final TankContainer TANK_CONTAINER = new TankContainer();
 
+    /**
+     * 炮弹容器;
+     */
+    public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
+
     private void paintOffScreen() {
         Graphics2D g2d = (Graphics2D) (OFF_SCREEN.getGraphics());
         g2d.setBackground(Color.GREEN);
@@ -60,8 +66,12 @@ public class TankClient extends JFrame implements Runnable {
         TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
             enemyTank.draw(g2d);
         });
+        //绘制炮弹;
+        MISSILES.keySet().forEach(missile -> {
+            missile.draw(g2d);
+        });
 
-        showEnemyCount(g2d);
+        showCount(g2d);
     }
 
     @Override
@@ -170,7 +180,7 @@ public class TankClient extends JFrame implements Runnable {
         });
 
         //玩家坦克;
-        new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER);
+        new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES);
 
         setVisible(true);
     }
@@ -192,6 +202,11 @@ public class TankClient extends JFrame implements Runnable {
         this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
             enemyTank.setSpeed();
             enemyTank.move();
+        });
+
+        //移动炮弹;
+        MISSILES.keySet().forEach(missile -> {
+            missile.move();
         });
         repaint();
         final long elapsed = System.currentTimeMillis() - start;
@@ -226,7 +241,7 @@ public class TankClient extends JFrame implements Runnable {
             } else {
                 x += Constants.TANK_LENGTH;
             }
-            new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER);
+            new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES);
         }
         final long elapsed = System.currentTimeMillis() - start;
         //log.info("n={};TANK_CONTAINER={};elapsed={}ms;", n, TANK_CONTAINER, elapsed);
@@ -253,7 +268,7 @@ public class TankClient extends JFrame implements Runnable {
         }
     }
 
-    public void showEnemyCount(Graphics2D g2d) {
+    public void showCount(Graphics2D g2d) {
         Color oldColor = g2d.getColor();
         g2d.setColor(Color.MAGENTA);
         String str = new StringBuilder().append("player_count:")
@@ -261,6 +276,9 @@ public class TankClient extends JFrame implements Runnable {
                 .append("  ")
                 .append("enemy_count:")
                 .append(TANK_CONTAINER.enemyTanks.size())
+                .append("  ")
+                .append("missile_count:")
+                .append(MISSILES.size())
                 .substring(0);
         g2d.drawString(str, 150, 50);
         g2d.setColor(oldColor);
