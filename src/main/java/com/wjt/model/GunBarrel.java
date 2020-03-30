@@ -67,7 +67,7 @@ public class GunBarrel {
                 yEnd = yStart + barrelLength;
                 break;
         }
-        log.info("gun_barrel;({},{})=>({},{});",xStart,yStart,xEnd,yEnd);
+        //log.info("gun_barrel;({},{})=>({},{});",xStart,yStart,xEnd,yEnd);
     }
 
 

@@ -56,6 +56,8 @@ public class Tank {
     //public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
     public final ConcurrentHashMap<Missile, Object> MISSILES;
 
+    public int score;
+
     public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles) {
         this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer, missiles);
     }
@@ -79,11 +81,13 @@ public class Tank {
         if (this.playerType == PlayerType.PLAYER_D) {
             //敌人坦克;
             this.tankContainer.enemyTanks.put(this, Boolean.TRUE);
-            color = Color.YELLOW;
+            this.color = Color.YELLOW;
+            this.score = Constants.ENEMY_SCORE;
         } else {
             //玩家坦克;
             this.tankContainer.playerTanks.put(this, Boolean.TRUE);
-            color = Color.RED;
+            this.color = Color.RED;
+            this.score = Constants.PLAYER_SCORE;
         }
         //log.info("this.playerType={};this.tankContainer={};", this.playerType, this.tankContainer);
         log.info("this.playerType={};this.color={};init_pos=({},{});", this.playerType, this.color, this.x, this.y);
@@ -241,6 +245,18 @@ public class Tank {
                     }
                 }
             }
+        }
+    }
+
+    public void addScore() {
+        this.score += Constants.HIT_ADD_SCORE;
+    }
+
+    public void subScore() {
+        this.score -= Constants.HIT_SUB_SCORE;
+        if (this.score <= 0) {
+            //死亡;
+            destroy();
         }
     }
 

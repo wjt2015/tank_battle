@@ -65,4 +65,17 @@ public interface Constants {
 
     ScheduledThreadPoolExecutor THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(10);
 
+    /**
+     * 击中一个敌人增加、减少的分数;
+     */
+    int HIT_ADD_SCORE = 5;
+    int HIT_SUB_SCORE = 4;
+
+    /**
+     * 玩家、敌人坦克的初始分数;
+     */
+    int PLAYER_SCORE = 50;
+
+    int ENEMY_SCORE = 20;
+
 }

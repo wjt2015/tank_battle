@@ -6,6 +6,7 @@ import com.wjt.common.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.JFrame;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -17,6 +18,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -53,11 +56,23 @@ public class TankClient extends JFrame implements Runnable {
      */
     public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
 
+    /**
+     * 总的敌人数量;
+     */
+    public volatile int enemyCount = 30;
+
     private void paintOffScreen() {
         Graphics2D g2d = (Graphics2D) (OFF_SCREEN.getGraphics());
         g2d.setBackground(Color.GREEN);
         g2d.clearRect(0, 0, width, height);
 
+        if (checkGameWin(g2d)) {
+            return;
+        }
+
+        if (checkGameOver(g2d)) {
+            return;
+        }
         //绘制玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
             playerTank.draw(g2d);
@@ -192,6 +207,8 @@ public class TankClient extends JFrame implements Runnable {
         buildEnemyTank();
         //敌人坦克发射炮弹;
         enemyFire();
+        //炮击检测;
+        hitTanks();
 
         //移动玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
@@ -219,7 +236,10 @@ public class TankClient extends JFrame implements Runnable {
      */
     public void buildEnemyTank() {
 
-        if (TANK_CONTAINER.enemyTanks.keySet().size() >= 20) {
+        if (TANK_CONTAINER.enemyTanks.keySet().size() >= 10) {
+            return;
+        }
+        if (enemyCount <= 0) {
             return;
         }
         final long start = System.currentTimeMillis();
@@ -234,6 +254,7 @@ public class TankClient extends JFrame implements Runnable {
             n = Math.abs(Constants.RANDOM.nextInt()) % 17 + 1;
         }
 
+        //n = 1;
         for (int i = 0; i < n; i++) {
             if (x >= X2) {
                 x = Constants.INIT_X;
@@ -243,6 +264,7 @@ public class TankClient extends JFrame implements Runnable {
             }
             new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES);
         }
+        this.enemyCount -= n;
         final long elapsed = System.currentTimeMillis() - start;
         //log.info("n={};TANK_CONTAINER={};elapsed={}ms;", n, TANK_CONTAINER, elapsed);
         log.info("n={};elapsed={}ms;", n, elapsed);
@@ -281,7 +303,60 @@ public class TankClient extends JFrame implements Runnable {
                 .append(MISSILES.size())
                 .substring(0);
         g2d.drawString(str, 150, 50);
+        g2d.drawString(getPlayerScore(), 150, 70);
         g2d.setColor(oldColor);
+    }
+
+    public String getPlayerScore() {
+        StringBuilder stringBuilder = new StringBuilder();
+        TANK_CONTAINER.playerTanks.keySet().forEach(playerYank -> {
+            stringBuilder.append(playerYank.playerType)
+                    .append(":")
+                    .append(playerYank.score);
+        });
+        return stringBuilder.substring(0);
+    }
+
+    public void hitTanks() {
+        for (Missile missile : MISSILES.keySet()) {
+            //敌人的炮弹只能打击玩家;
+            if (missile.tank.playerType == PlayerType.PLAYER_D) {
+                for (Tank playerTank : TANK_CONTAINER.playerTanks.keySet()) {
+                    if (missile.hitTank(playerTank)) {
+                        break;
+                    }
+                }
+            } else {
+                //玩家的炮弹只能打击敌人;
+                for (Tank enemyTank : TANK_CONTAINER.enemyTanks.keySet()) {
+                    if (missile.hitTank(enemyTank)) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean checkGameOver(Graphics2D g2d) {
+        if (TANK_CONTAINER.playerTanks.isEmpty()) {
+            g2d.setColor(Color.RED);
+            g2d.setStroke(new BasicStroke(50));
+            g2d.drawString("Game Over", 500, 500);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean checkGameWin(Graphics2D g2d) {
+        if (enemyCount <= 0) {
+            g2d.setColor(Color.RED);
+            g2d.setStroke(new BasicStroke(50));
+            g2d.drawString("Game Win!!", 500, 500);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
