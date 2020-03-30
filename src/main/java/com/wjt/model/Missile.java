@@ -2,6 +2,7 @@ package com.wjt.model;
 
 import com.wjt.common.Constants;
 import com.wjt.common.Direction;
+import com.wjt.common.PlayerType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.Color;
@@ -46,7 +47,7 @@ public class Missile {
         //addMissileDestroyListener(missileDestroyListener);
     }
 
-    public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect,Color color) {
+    public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect, Color color) {
         this.x = x;
         this.y = y;
         length = Constants.MISSILE_LENGTH;
@@ -121,6 +122,37 @@ public class Missile {
         g2d.setColor(color);
         g2d.fillOval(x, y, length, width);
         g2d.setColor(oldColor);
+    }
+
+
+    public boolean hitTank(Tank objTank) {
+        if (objTank == null) {
+            return false;
+        }
+        if (this.tank == objTank) {
+            return false;
+        } else {
+            Rectangle missileRect = new Rectangle(x, y, Constants.MISSILE_LENGTH, Constants.MISSILE_WIDTH);
+            Rectangle objRect = new Rectangle(objTank.x, objTank.y, objTank.length, objTank.width);
+            boolean hit = (!missileRect.intersection(objRect).isEmpty());
+            log.info("missileRect={};objRect={};hit={};", missileRect, objRect, hit);
+            if (hit) {
+                /**
+                 * 击中坦克;
+                 *  发出该炮弹的坦克加分;
+                 *  被击中的坦克减分;
+                 *  炮弹消失;
+                 */
+                if (this.tank.playerType != PlayerType.PLAYER_D) {
+                    this.tank.addScore();
+                }
+                objTank.subScore();
+                destroy();
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
 
