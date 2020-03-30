@@ -25,12 +25,12 @@ public class TankClient extends JFrame implements Runnable {
         public volatile int y = Constants.INIT_Y;
         public volatile int xv = 0;
         public volatile int yv = 0;*/
-    public int width = 800;
-    public int height = 600;
+    public int width = 1200;
+    public int height = 1000;
     public int interval = 30;
     int d = 30;
 
-    public Rectangle rect;
+    public Rectangle rect = new Rectangle(0 + d, 0 + d, width - 2 * d, height - 2 * d);
 
     /**
      * 双缓冲用的虚拟图片;
@@ -40,7 +40,7 @@ public class TankClient extends JFrame implements Runnable {
     /**
      * 坦克;
      */
-    public Tank tank = new Tank();
+    public Tank tank;
 
     private void paintOffScreen() {
         Graphics2D g2d = (Graphics2D) (offScreen.getGraphics());
@@ -148,17 +148,17 @@ public class TankClient extends JFrame implements Runnable {
 
             }
         });
+
+        tank = new Tank(rect);
+
         setVisible(true);
-
-        rect = new Rectangle(0 + d, 0 + d, width - 2 * d, height - 2 * d);
-
     }
 
     @Override
     public void run() {
         while (true) {
             //log.info("tank position:({},{});", x, y);
-            tank.move(rect);
+            tank.move();
             repaint();
             Utils.sleep(interval);
         }
