@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -175,7 +176,6 @@ public class Tank {
         //移动炮管;
         this.gunBarrel.move(x + (length >> 1), y + (width >> 1), this.direction);
         log.info("this.playerType={};this.color={};move_pos=({},{});", this.playerType, this.color, this.x, this.y);
-
     }
 
     /**
@@ -190,7 +190,7 @@ public class Tank {
     }
 
     public void setSpeed() {
-        int size = this.tankContainer.playerTanks.size(), d = 5;
+        int size = this.tankContainer.playerTanks.size(), d = 20;
         //增加随机性;
         int t = Constants.RANDOM.nextInt(1501);
         if (this.playerType == PlayerType.PLAYER_D && size >= 1) {
@@ -296,6 +296,8 @@ public class Tank {
                 this.yv = -Constants.TANK_YV;
             } else if (t >= 1100 && t < (1000 + d)) {
                 this.xv = -this.xv;
+            } else if (t >= 1100 && t < (1100 + d)) {
+                this.yv = -this.yv;
             } else {
                 //保持原样;
             }
@@ -312,6 +314,25 @@ public class Tank {
             //死亡;
             destroy();
         }
+    }
+
+
+    /**
+     * 撞墙检测;
+     *
+     * @param walls
+     * @return 第一个会撞到的墙;
+     */
+    public Wall mayHitWalls(Collection<Wall> walls) {
+        int newX = this.x + this.xv;
+        int newY = this.y + this.yv;
+        Rectangle tankRect = new Rectangle(newX, newY, this.length, this.width);
+        for (Wall wall : walls) {
+            if (wall.rect.intersects(tankRect)) {
+                return wall;
+            }
+        }
+        return null;
     }
 
 
