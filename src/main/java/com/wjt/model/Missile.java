@@ -8,9 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @Time 2020/3/29/23:43
@@ -20,6 +18,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 @Slf4j
 public class Missile {
 
+    /**
+     * 炮弹右上角坐标;
+     */
     public volatile int x, y;
     public volatile int xv, yv;
     public volatile int length, width;
@@ -29,23 +30,10 @@ public class Missile {
      */
     public volatile Rectangle rect;
 
-    public Tank tank;
-
-    public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect) {
-        this.x = x;
-        this.y = y;
-        length = Constants.MISSILE_LENGTH;
-        width = Constants.MISSILE_WIDTH;
-        color = Color.BLACK;
-        setDirection(direction);
-        this.tank = tank;
-        this.tank.MISSILES.put(this, Boolean.TRUE);
-        this.rect = rect;
-        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
-        log.info("tank.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
-                tank.playerType, this.x, this.y, this.tank.MISSILES.size(), direction, this.rect);
-        //addMissileDestroyListener(missileDestroyListener);
-    }
+    /**
+     * 该炮弹所属的坦克;
+     */
+    public final Tank TANK;
 
     public Missile(final int x, final int y, final Direction direction, Tank tank, Rectangle rect, Color color) {
         this.x = x;
@@ -54,12 +42,14 @@ public class Missile {
         width = Constants.MISSILE_WIDTH;
         this.color = color;
         setDirection(direction);
-        this.tank = tank;
-        this.tank.MISSILES.put(this, Boolean.TRUE);
+        this.TANK = tank;
+        this.TANK.MISSILES.put(this, Boolean.TRUE);
         this.rect = rect;
-        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.tank.MISSILES, direction, this.rect);
-        log.info("tank.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
-                tank.playerType, this.x, this.y, this.tank.MISSILES.size(), direction, this.rect);
+
+
+        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.TANK.MISSILES, direction, this.rect);
+        log.info("TANK.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
+                tank.playerType, this.x, this.y, this.TANK.MISSILES.size(), direction, this.rect);
         //addMissileDestroyListener(missileDestroyListener);
     }
 
@@ -112,9 +102,9 @@ public class Missile {
     }
 
     public void destroy() {
-        log.info("before;tank.playerType={};missilePos=({},{});this.missiles.size={};", tank.playerType, this.x, this.y, this.tank.MISSILES.size());
-        this.tank.MISSILES.remove(this);
-        log.info("after;tank.playerType={};missilePos=({},{});this.missiles.size={};", tank.playerType, this.x, this.y, this.tank.MISSILES.size());
+        log.info("before;TANK.playerType={};missilePos=({},{});this.missiles.size={};", TANK.playerType, this.x, this.y, this.TANK.MISSILES.size());
+        this.TANK.MISSILES.remove(this);
+        log.info("after;TANK.playerType={};missilePos=({},{});this.missiles.size={};", TANK.playerType, this.x, this.y, this.TANK.MISSILES.size());
     }
 
     public void draw(Graphics2D g2d) {
@@ -129,7 +119,7 @@ public class Missile {
         if (objTank == null) {
             return false;
         }
-        if (this.tank == objTank) {
+        if (this.TANK == objTank) {
             return false;
         } else {
             Rectangle missileRect = new Rectangle(x, y, Constants.MISSILE_LENGTH, Constants.MISSILE_WIDTH);
@@ -139,12 +129,16 @@ public class Missile {
             if (hit) {
                 /**
                  * 击中坦克;
+                 * 爆炸;
                  *  发出该炮弹的坦克加分;
                  *  被击中的坦克减分;
                  *  炮弹消失;
                  */
-                if (this.tank.playerType != PlayerType.PLAYER_D) {
-                    this.tank.addScore();
+
+                new Bomb(this.x + (this.length >> 1), this.y + (this.width >> 1), this);
+
+                if (this.TANK.playerType != PlayerType.PLAYER_D) {
+                    this.TANK.addScore();
                 }
                 objTank.subScore();
                 destroy();

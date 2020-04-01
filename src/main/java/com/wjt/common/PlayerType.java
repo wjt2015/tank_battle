@@ -15,8 +15,8 @@ public enum PlayerType {
     PLAYER_D(1, "player_D"),;
 
 
-    private final int code;
-    private final String desc;
+    public final int code;
+    public final String desc;
 
 
     PlayerType(int code, String desc) {

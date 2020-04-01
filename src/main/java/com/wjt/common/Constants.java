@@ -2,6 +2,7 @@ package com.wjt.common;
 
 import com.wjt.model.Missile;
 
+import java.awt.Color;
 import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -69,13 +70,23 @@ public interface Constants {
      * 击中一个敌人增加、减少的分数;
      */
     int HIT_ADD_SCORE = 5;
-    int HIT_SUB_SCORE = 4;
+    int HIT_SUB_SCORE = 10;
 
     /**
      * 玩家、敌人坦克的初始分数;
      */
-    int PLAYER_SCORE = 50;
+    int PLAYER_SCORE = 60;
 
-    int ENEMY_SCORE = 20;
+    int ENEMY_SCORE = 30;
+
+
+    /**
+     * 爆炸颜色;
+     */
+    Color BOMB_COLOR = Color.RED;
+    /**
+     * 爆炸的图形区域尺寸数组;
+     */
+    int[] BOMB_SIZE_ARR = {10, 20, 30, 40, 50, 60, 50, 40, 30, 20, 10};
 
 }
