@@ -56,13 +56,18 @@ public class Tank {
     //public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
     public final ConcurrentHashMap<Missile, Object> MISSILES;
 
+    /**
+     * 爆炸容器;
+     */
+    public final ConcurrentHashMap<Bomb, Object> BOMB_CONTAINER;
+
     public int score;
 
-    public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles) {
-        this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer, missiles);
+    public Tank(Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles, ConcurrentHashMap<Bomb, Object> bombContainer) {
+        this(Constants.INIT_X, Constants.INIT_Y, rect, playerType, tankContainer, missiles, bombContainer);
     }
 
-    public Tank(int x, int y, Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles) {
+    public Tank(int x, int y, Rectangle rect, PlayerType playerType, TankContainer tankContainer, ConcurrentHashMap<Missile, Object> missiles, ConcurrentHashMap<Bomb, Object> bombContainer) {
         this.x = x;
         this.y = y;
         xv = 0;
@@ -72,6 +77,7 @@ public class Tank {
         direction = Direction.BOTTOM;
         this.rect = rect;
         this.MISSILES = missiles;
+        this.BOMB_CONTAINER = bombContainer;
         log.info("Before_GunBarrel;playerType={};", playerType);
         this.gunBarrel = new GunBarrel(x + (length >> 1), y + (width >> 1), this.direction, Constants.GUN_BARREL_LENGTH, Color.DARK_GRAY);
 
@@ -184,66 +190,114 @@ public class Tank {
     }
 
     public void setSpeed() {
-        int size = this.tankContainer.playerTanks.size();
+        int size = this.tankContainer.playerTanks.size(), d = 5;
         //增加随机性;
         int t = Constants.RANDOM.nextInt(1501);
-        if (this.playerType == PlayerType.PLAYER_D && size >= 1 && (t > 131 && t < 160)) {
+        if (this.playerType == PlayerType.PLAYER_D && size >= 1) {
             /**
              * 只能自动设定敌人坦克的速度;
-             * 敌人的坦克由系统自动控制,总是向某一玩家的方向运动,向玩家开炮,并能避开障碍物;
+             * 敌人的坦克由系统自动控制;
+             * 主要有三种移动策略:
+             * 某一玩家的方向运动,向玩家开炮,并能避开障碍物;
+             * 随机运动;
+             * 保持原样;
              */
-            int i = Math.abs(Constants.RANDOM.nextInt());
 
-            ArrayList<Tank> playerTanks = new ArrayList<>(this.tankContainer.playerTanks.keySet());
-            size = playerTanks.size();
-            //Tank[] playerTanks = this.tankContainer.playerTanks.keySet().stream().filter(o -> o != null).collect(Collectors.toSet()).toArray(new Tank[size]);
+            //敌人的坦克越少,进攻的几率越大;
+            final int enemyCount = this.tankContainer.enemyTanks.size();
+            int floor = 131, ceil = 170;
+            if (enemyCount < 3) {
+                ceil += 60;
+            } else if (enemyCount < 6) {
+                ceil += 30;
+            }
 
-            log.info("playerTanks={};tank_pos=({},{});", playerTanks, this.x, this.y);
+            if (t > floor && t < ceil) {
+                int i = Math.abs(Constants.RANDOM.nextInt());
 
-            if (size >= 1) {
-                //随机选择一个玩家坦克,并向它进攻;
-                Tank playerTank = playerTanks.get(i % size);
+                ArrayList<Tank> playerTanks = new ArrayList<>(this.tankContainer.playerTanks.keySet());
+                size = playerTanks.size();
+                log.info("playerTanks={};tank_pos=({},{});", playerTanks, this.x, this.y);
+                if (size >= 1) {
+                    //随机选择一个玩家坦克,并向它进攻;
+                    Tank playerTank = playerTanks.get(i % size);
 
-                if (playerTank.x < this.x) {
-                    this.xv = -Constants.TANK_XV;
+                    if (playerTank.x < this.x) {
+                        this.xv = -Constants.TANK_XV;
+                        if (playerTank.y < this.y) {
+                            this.direction = Direction.LEFT_UPPER;
+                            this.yv = -Constants.TANK_YV;
+                        } else if (playerTank.y == this.y) {
+                            this.direction = Direction.LEFT;
+                            this.yv = 0;
+                        } else {
+                            this.direction = Direction.LEFT_BOTTOM;
+                            this.yv = Constants.TANK_YV;
+                        }
+                    } else if (playerTank.x == this.x) {
+                        this.xv = 0;
 
-                    if (playerTank.y < this.y) {
-                        this.direction = Direction.LEFT_UPPER;
-                        this.yv = -Constants.TANK_YV;
-                    } else if (playerTank.y == this.y) {
-                        this.direction = Direction.LEFT;
-                        this.yv = 0;
-                    } else {
-                        this.direction = Direction.LEFT_BOTTOM;
-                        this.yv = Constants.TANK_YV;
-                    }
-                } else if (playerTank.x == this.x) {
-                    this.xv = 0;
-
-                    if (playerTank.y < this.y) {
-                        this.direction = Direction.UPPER;
-                        this.yv = -Constants.TANK_YV;
-                    } else if (playerTank.y == this.y) {
+                        if (playerTank.y < this.y) {
+                            this.direction = Direction.UPPER;
+                            this.yv = -Constants.TANK_YV;
+                        } else if (playerTank.y == this.y) {
 /*                        this.direction = Direction.LEFT;
                         this.yv = 0;*/
+                        } else {
+                            this.direction = Direction.BOTTOM;
+                            this.yv = Constants.TANK_YV;
+                        }
                     } else {
-                        this.direction = Direction.BOTTOM;
-                        this.yv = Constants.TANK_YV;
-                    }
-                } else {
-                    this.xv = Constants.TANK_XV;
+                        this.xv = Constants.TANK_XV;
 
-                    if (playerTank.y < this.y) {
-                        this.direction = Direction.RIGHT_UPPER;
-                        this.yv = -Constants.TANK_YV;
-                    } else if (playerTank.y == this.y) {
-                        this.direction = Direction.RIGHT;
-                        this.yv = 0;
-                    } else {
-                        this.direction = Direction.RIGHT_BOTTOM;
-                        this.yv = Constants.TANK_YV;
+                        if (playerTank.y < this.y) {
+                            this.direction = Direction.RIGHT_UPPER;
+                            this.yv = -Constants.TANK_YV;
+                        } else if (playerTank.y == this.y) {
+                            this.direction = Direction.RIGHT;
+                            this.yv = 0;
+                        } else {
+                            this.direction = Direction.RIGHT_BOTTOM;
+                            this.yv = Constants.TANK_YV;
+                        }
                     }
                 }
+            } else if (t >= 300 && t < (300 + d)) {
+                this.direction = Direction.UPPER;
+                this.xv = 0;
+                this.yv = -Constants.TANK_YV;
+            } else if (t >= 400 && t < (400 + d)) {
+                this.direction = Direction.RIGHT_UPPER;
+                this.xv = Constants.TANK_XV;
+                this.yv = -Constants.TANK_YV;
+            } else if (t >= 500 && t < (500 + d)) {
+                this.direction = Direction.RIGHT;
+                this.xv = Constants.TANK_XV;
+                this.yv = 0;
+            } else if (t >= 600 && t < (600 + d)) {
+                this.direction = Direction.RIGHT_BOTTOM;
+                this.xv = Constants.TANK_XV;
+                this.yv = Constants.TANK_YV;
+            } else if (t >= 700 && t < (700 + d)) {
+                this.direction = Direction.BOTTOM;
+                this.xv = 0;
+                this.yv = Constants.TANK_YV;
+            } else if (t >= 800 && t < (800 + d)) {
+                this.direction = Direction.LEFT_BOTTOM;
+                this.xv = -Constants.TANK_XV;
+                this.yv = Constants.TANK_YV;
+            } else if (t >= 900 && t < (900 + d)) {
+                this.direction = Direction.LEFT;
+                this.xv = -Constants.TANK_XV;
+                this.yv = 0;
+            } else if (t >= 1000 && t < (1000 + d)) {
+                this.direction = Direction.LEFT_UPPER;
+                this.xv = -Constants.TANK_XV;
+                this.yv = -Constants.TANK_YV;
+            } else if (t >= 1100 && t < (1000 + d)) {
+                this.xv = -this.xv;
+            } else {
+                //保持原样;
             }
         }
     }

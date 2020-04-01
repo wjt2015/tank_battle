@@ -8,8 +8,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Description
  */
 public class TankContainer {
-    public ConcurrentHashMap<Tank, Object> playerTanks = new ConcurrentHashMap<>(3);
-    public ConcurrentHashMap<Tank, Object> enemyTanks = new ConcurrentHashMap<>(50);
+    public final ConcurrentHashMap<Tank, Object> playerTanks = new ConcurrentHashMap<>(3);
+    public final ConcurrentHashMap<Tank, Object> enemyTanks = new ConcurrentHashMap<>(50);
+
+
+    public void clear() {
+        this.playerTanks.clear();
+        this.enemyTanks.clear();
+    }
+
+    public boolean isEmpty() {
+        return (this.playerTanks.isEmpty() && this.enemyTanks.isEmpty());
+    }
 
     @Override
     public String toString() {

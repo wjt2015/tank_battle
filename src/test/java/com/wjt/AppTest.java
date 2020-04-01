@@ -40,9 +40,9 @@ public class AppTest
 
     @Test
     public void tank1() {
-        TankClient tank = new TankClient();
-        tank.lauchFrame();
-        log.info("tank finish!tank={};", tank);
+        TankClient TANK = new TankClient();
+        TANK.lauchFrame();
+        log.info("TANK finish!TANK={};", TANK);
     }
 */
 

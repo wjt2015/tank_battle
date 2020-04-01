@@ -2,7 +2,6 @@ package com.wjt.model;
 
 import com.wjt.common.Constants;
 import com.wjt.common.PlayerType;
-import com.wjt.common.Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.JFrame;
@@ -18,10 +17,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @Time 2020/3/29/16:47
@@ -57,20 +53,32 @@ public class TankClient extends JFrame implements Runnable {
     public final ConcurrentHashMap<Missile, Object> MISSILES = new ConcurrentHashMap<>(50);
 
     /**
+     * 爆炸容器;
+     */
+    public final ConcurrentHashMap<Bomb, Object> BOMB_CONTAINER = new ConcurrentHashMap<>(50);
+
+    /**
      * 总的敌人数量;
      */
-    public volatile int enemyCount = 30;
+    public volatile int enemyCount = 50;
 
     private void paintOffScreen() {
+
+        if (checkGameEnd()) {
+            return;
+        }
+
         Graphics2D g2d = (Graphics2D) (OFF_SCREEN.getGraphics());
         g2d.setBackground(Color.GREEN);
         g2d.clearRect(0, 0, width, height);
 
         if (checkGameWin(g2d)) {
+            this.TANK_CONTAINER.clear();
             return;
         }
 
         if (checkGameOver(g2d)) {
+            this.TANK_CONTAINER.clear();
             return;
         }
         //绘制玩家的坦克;
@@ -84,6 +92,11 @@ public class TankClient extends JFrame implements Runnable {
         //绘制炮弹;
         MISSILES.keySet().forEach(missile -> {
             missile.draw(g2d);
+        });
+
+        //绘制爆炸;
+        this.BOMB_CONTAINER.keySet().forEach(bomb -> {
+            bomb.draw(g2d);
         });
 
         showCount(g2d);
@@ -195,7 +208,7 @@ public class TankClient extends JFrame implements Runnable {
         });
 
         //玩家坦克;
-        new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES);
+        new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
 
         setVisible(true);
     }
@@ -222,8 +235,12 @@ public class TankClient extends JFrame implements Runnable {
         });
 
         //移动炮弹;
-        MISSILES.keySet().forEach(missile -> {
+        this.MISSILES.keySet().forEach(missile -> {
             missile.move();
+        });
+        //爆炸;
+        this.BOMB_CONTAINER.keySet().forEach(bomb -> {
+            bomb.proceed();
         });
         repaint();
         final long elapsed = System.currentTimeMillis() - start;
@@ -236,7 +253,7 @@ public class TankClient extends JFrame implements Runnable {
      */
     public void buildEnemyTank() {
 
-        if (TANK_CONTAINER.enemyTanks.keySet().size() >= 10) {
+        if (TANK_CONTAINER.enemyTanks.keySet().size() >= 8) {
             return;
         }
         if (enemyCount <= 0) {
@@ -244,16 +261,18 @@ public class TankClient extends JFrame implements Runnable {
         }
         final long start = System.currentTimeMillis();
         int n = 0, x = Constants.INIT_X, y = Constants.INIT_Y + 200;
-        if (TANK_CONTAINER.enemyTanks.keySet().size() > 30) {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 5;
-        } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 20) {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 11;
-        } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 10) {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 17;
+        if (TANK_CONTAINER.enemyTanks.keySet().size() > 5) {
+            n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
+        } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 3) {
+            n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
+        } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 1) {
+            n = Math.abs(Constants.RANDOM.nextInt()) % 7 + 1;
         } else {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 17 + 1;
+            n = Math.abs(Constants.RANDOM.nextInt()) % 7 + 1;
         }
 
+        //最大的坦克产量限制;
+        n = (n <= enemyCount ? n : enemyCount);
         //n = 1;
         for (int i = 0; i < n; i++) {
             if (x >= X2) {
@@ -262,7 +281,7 @@ public class TankClient extends JFrame implements Runnable {
             } else {
                 x += Constants.TANK_LENGTH;
             }
-            new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES);
+            new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
         }
         this.enemyCount -= n;
         final long elapsed = System.currentTimeMillis() - start;
@@ -277,9 +296,16 @@ public class TankClient extends JFrame implements Runnable {
         final int sum = TANK_CONTAINER.enemyTanks.keySet().size();
         if (sum >= 1) {
             //n个发射机会;
-            final int n = Constants.RANDOM.nextInt(sum + 1);
-            final double threhold = 100.0 * n / sum;
-            final int floor = 131, ceil = floor + (int) (threhold);
+            final int n = Constants.RANDOM.nextInt(sum + 1) + 1;
+            double threshold = 100.0 * n / (sum + 1);
+            //敌人的坦克越少,开炮的几率越大;
+            final int enemyCount = this.TANK_CONTAINER.enemyTanks.size();
+            if (enemyCount < 3) {
+                threshold += 60;
+            } else if (enemyCount < 6) {
+                threshold += 30;
+            }
+            final int floor = 71, ceil = floor + (int) (threshold);
             TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
                 int t = Constants.RANDOM.nextInt(1501);
                 if (t >= floor && t < ceil) {
@@ -296,8 +322,11 @@ public class TankClient extends JFrame implements Runnable {
         String str = new StringBuilder().append("player_count:")
                 .append(TANK_CONTAINER.playerTanks.size())
                 .append("  ")
-                .append("enemy_count:")
+                .append("fighting_enemy_count:")
                 .append(TANK_CONTAINER.enemyTanks.size())
+                .append("  ")
+                .append("left_enemy_count:")
+                .append(enemyCount)
                 .append("  ")
                 .append("missile_count:")
                 .append(MISSILES.size())
@@ -320,7 +349,7 @@ public class TankClient extends JFrame implements Runnable {
     public void hitTanks() {
         for (Missile missile : MISSILES.keySet()) {
             //敌人的炮弹只能打击玩家;
-            if (missile.tank.playerType == PlayerType.PLAYER_D) {
+            if (missile.TANK.playerType == PlayerType.PLAYER_D) {
                 for (Tank playerTank : TANK_CONTAINER.playerTanks.keySet()) {
                     if (missile.hitTank(playerTank)) {
                         break;
@@ -349,14 +378,25 @@ public class TankClient extends JFrame implements Runnable {
     }
 
     public boolean checkGameWin(Graphics2D g2d) {
-        if (enemyCount <= 0) {
+        if (enemyCount <= 0 && this.TANK_CONTAINER.enemyTanks.isEmpty() && !this.TANK_CONTAINER.playerTanks.isEmpty()) {
             g2d.setColor(Color.RED);
             g2d.setStroke(new BasicStroke(50));
-            g2d.drawString("Game Win!!", 500, 500);
+
+            StringBuilder summaryBuilder = new StringBuilder()
+                    .append("Game Win!!");
+            this.TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
+                summaryBuilder.append(playerTank.playerType.desc).append("_score:")
+                        .append(playerTank.score);
+            });
+            g2d.drawString(summaryBuilder.substring(0), 500, 500);
             return true;
         } else {
             return false;
         }
+    }
+
+    public boolean checkGameEnd() {
+        return this.TANK_CONTAINER.isEmpty() && enemyCount <= 0;
     }
 
 }
