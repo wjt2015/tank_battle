@@ -89,4 +89,19 @@ public interface Constants {
      */
     int[] BOMB_SIZE_ARR = {10, 20, 30, 40, 50, 60, 50, 40, 30, 20, 10};
 
+
+    /**
+     * 墙的颜色;
+     */
+    Color WALL_COLOR = Color.GRAY;
+
+    /**
+     * 墙的默认初始生命值;
+     */
+    int WALL_INIT_SCORE = 200;
+    /**
+     * 墙被炮击一次减少的生命值;
+     */
+    int WALL_BOMB_HIT_SCORE = 2;
+
 }

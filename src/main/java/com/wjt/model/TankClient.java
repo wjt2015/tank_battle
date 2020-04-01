@@ -58,6 +58,11 @@ public class TankClient extends JFrame implements Runnable {
     public final ConcurrentHashMap<Bomb, Object> BOMB_CONTAINER = new ConcurrentHashMap<>(50);
 
     /**
+     * 墙的容器;
+     */
+    public final ConcurrentHashMap<Wall, Object> WALL_CONTAINER = new ConcurrentHashMap<>(10);
+
+    /**
      * 总的敌人数量;
      */
     public volatile int enemyCount = 50;
@@ -67,7 +72,6 @@ public class TankClient extends JFrame implements Runnable {
         if (checkGameEnd()) {
             return;
         }
-
         Graphics2D g2d = (Graphics2D) (OFF_SCREEN.getGraphics());
         g2d.setBackground(Color.GREEN);
         g2d.clearRect(0, 0, width, height);
@@ -97,6 +101,11 @@ public class TankClient extends JFrame implements Runnable {
         //绘制爆炸;
         this.BOMB_CONTAINER.keySet().forEach(bomb -> {
             bomb.draw(g2d);
+        });
+
+        //绘制墙;
+        this.WALL_CONTAINER.keySet().forEach(wall -> {
+            wall.draw(g2d);
         });
 
         showCount(g2d);
@@ -210,6 +219,12 @@ public class TankClient extends JFrame implements Runnable {
         //玩家坦克;
         new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
 
+        //墙;
+        new Wall(200, 200, 200, 10, this.WALL_CONTAINER);
+        new Wall(400, 400, 300, 10, this.WALL_CONTAINER);
+        new Wall(200, 400, 10, 200, this.WALL_CONTAINER);
+        new Wall(300, 600, 10, 200, this.WALL_CONTAINER);
+
         setVisible(true);
     }
 
@@ -220,18 +235,26 @@ public class TankClient extends JFrame implements Runnable {
         buildEnemyTank();
         //敌人坦克发射炮弹;
         enemyFire();
-        //炮击检测;
+        //炮击坦克检测;
         hitTanks();
+        //炮击墙检测;
+        hitWalls();
 
         //移动玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
-            playerTank.move();
+            //先执行撞墙检测;
+            if (playerTank.mayHitWalls(this.WALL_CONTAINER.keySet()) == null) {
+                playerTank.move();
+            }
         });
 
         //移动敌人的坦克;
         this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
             enemyTank.setSpeed();
-            enemyTank.move();
+            //先执行撞墙检测;
+            if (enemyTank.mayHitWalls(this.WALL_CONTAINER.keySet()) == null) {
+                enemyTank.move();
+            }
         });
 
         //移动炮弹;
@@ -346,6 +369,9 @@ public class TankClient extends JFrame implements Runnable {
         return stringBuilder.substring(0);
     }
 
+    /**
+     * 炮弹击中坦克的检测;
+     */
     public void hitTanks() {
         for (Missile missile : MISSILES.keySet()) {
             //敌人的炮弹只能打击玩家;
@@ -364,6 +390,14 @@ public class TankClient extends JFrame implements Runnable {
                 }
             }
         }
+    }
+
+    public void hitWalls() {
+        this.MISSILES.keySet().forEach(missile -> {
+            this.WALL_CONTAINER.keySet().forEach(wall -> {
+                missile.hitWall(wall);
+            });
+        });
     }
 
     public boolean checkGameOver(Graphics2D g2d) {

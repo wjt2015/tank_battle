@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Time 2020/3/29/23:43
@@ -146,6 +145,27 @@ public class Missile {
             } else {
                 return false;
             }
+        }
+    }
+
+    /**
+     * 炮弹击中墙的检测和处理;
+     *
+     * @param wall
+     * @return
+     */
+    public boolean hitWall(Wall wall) {
+        Rectangle missileRect = new Rectangle(x, y, Constants.MISSILE_LENGTH, Constants.MISSILE_WIDTH);
+        if (missileRect.intersects(wall.bombRect)) {
+            /**
+             * 撞墙爆炸;墙受损,炮弹消失;
+             */
+            new Bomb(this.x + (this.length >> 1), this.y + (this.width >> 1), this);
+            wall.destroy();
+            destroy();
+            return true;
+        } else {
+            return false;
         }
     }
 
