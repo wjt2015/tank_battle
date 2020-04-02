@@ -305,13 +305,13 @@ public class TankClient extends JFrame implements Runnable {
 
         //最大的坦克产量限制;
         n = (n <= enemyCount ? n : enemyCount);
-        //n = 1;
+
         for (int i = 0; i < n; i++) {
             if (x >= X2) {
                 x = Constants.INIT_X;
                 y += (Constants.TANK_LENGTH << 1);
             } else {
-                x += Constants.TANK_LENGTH;
+                x += Constants.TANK_LENGTH << 1;
             }
             new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
         }
