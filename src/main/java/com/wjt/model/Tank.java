@@ -1,6 +1,5 @@
 package com.wjt.model;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.wjt.common.Constants;
 import com.wjt.common.Direction;
 import com.wjt.common.PlayerType;
@@ -13,7 +12,6 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @Time 2020/3/29/22:46
