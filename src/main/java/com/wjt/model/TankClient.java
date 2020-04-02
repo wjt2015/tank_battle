@@ -224,6 +224,8 @@ public class TankClient extends JFrame implements Runnable {
         new Wall(400, 400, 300, 10, this.WALL_CONTAINER);
         new Wall(200, 400, 10, 200, this.WALL_CONTAINER);
         new Wall(300, 600, 10, 200, this.WALL_CONTAINER);
+        new Wall(300, 750, 300, 10, this.WALL_CONTAINER);
+        new Wall(300, 820, 300, 10, this.WALL_CONTAINER);
 
         setVisible(true);
     }
@@ -240,8 +242,13 @@ public class TankClient extends JFrame implements Runnable {
         //炮击墙检测;
         hitWalls();
 
+        //敌人坦克改变速度;
+        this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
+            enemyTank.setSpeed();
+        });
+
         //坦克穿越检测;
-        stopTankPassThrough();
+        //stopTankPassThrough();
 
         //移动玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
@@ -253,7 +260,6 @@ public class TankClient extends JFrame implements Runnable {
 
         //移动敌人的坦克;
         this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
-            enemyTank.setSpeed();
             //先执行撞墙检测;
             if (enemyTank.mayHitWalls(this.WALL_CONTAINER.keySet()) == null) {
                 enemyTank.move();
@@ -288,7 +294,7 @@ public class TankClient extends JFrame implements Runnable {
         final long start = System.currentTimeMillis();
         int n = 0, x = Constants.INIT_X, y = Constants.INIT_Y + 200;
         if (TANK_CONTAINER.enemyTanks.keySet().size() > 5) {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
+            n = Math.abs(Constants.RANDOM.nextInt()) % 3 + 1;
         } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 3) {
             n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
         } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 1) {

@@ -191,7 +191,7 @@ public class Tank {
     }
 
     public void setSpeed() {
-        int size = this.tankContainer.playerTanks.size(), d = 50;
+        int size = this.tankContainer.playerTanks.size(), d = 40;
         //增加随机性;
         int t = Constants.RANDOM.nextInt(1501);
         if (this.playerType == PlayerType.PLAYER_D && size >= 1) {
