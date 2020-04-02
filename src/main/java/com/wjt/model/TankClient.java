@@ -240,6 +240,9 @@ public class TankClient extends JFrame implements Runnable {
         //炮击墙检测;
         hitWalls();
 
+        //坦克穿越检测;
+        stopTankPassThrough();
+
         //移动玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
             //先执行撞墙检测;
@@ -431,6 +434,35 @@ public class TankClient extends JFrame implements Runnable {
 
     public boolean checkGameEnd() {
         return this.TANK_CONTAINER.isEmpty() && enemyCount <= 0;
+    }
+
+    /**
+     * 阻止坦克穿越;
+     */
+    public void stopTankPassThrough() {
+        this.TANK_CONTAINER.playerTanks.keySet().forEach(playerTank1 -> {
+            this.TANK_CONTAINER.playerTanks.keySet().forEach(playerTank2 -> {
+                if (playerTank1.willPassTank(playerTank2)) {
+                    playerTank1.stop();
+                    playerTank2.stop();
+                }
+            });
+            this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
+                if (playerTank1.willPassTank(enemyTank)) {
+                    playerTank1.stop();
+                    enemyTank.stop();
+                }
+            });
+        });
+
+        this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank1 -> {
+            this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank2 -> {
+                if (enemyTank1.willPassTank(enemyTank2)) {
+                    enemyTank1.stop();
+                    enemyTank2.stop();
+                }
+            });
+        });
     }
 
 }

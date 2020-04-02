@@ -77,7 +77,7 @@ public interface Constants {
      */
     int PLAYER_SCORE = 60;
 
-    int ENEMY_SCORE = 30;
+    int ENEMY_SCORE = 50;
 
 
     /**

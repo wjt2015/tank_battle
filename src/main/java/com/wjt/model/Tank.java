@@ -1,5 +1,6 @@
 package com.wjt.model;
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
 import com.wjt.common.Constants;
 import com.wjt.common.Direction;
 import com.wjt.common.PlayerType;
@@ -190,7 +191,7 @@ public class Tank {
     }
 
     public void setSpeed() {
-        int size = this.tankContainer.playerTanks.size(), d = 20;
+        int size = this.tankContainer.playerTanks.size(), d = 50;
         //增加随机性;
         int t = Constants.RANDOM.nextInt(1501);
         if (this.playerType == PlayerType.PLAYER_D && size >= 1) {
@@ -205,11 +206,11 @@ public class Tank {
 
             //敌人的坦克越少,进攻的几率越大;
             final int enemyCount = this.tankContainer.enemyTanks.size();
-            int floor = 131, ceil = 170;
+            int floor = 10, ceil = 100;
             if (enemyCount < 3) {
-                ceil += 60;
+                ceil += 200;
             } else if (enemyCount < 6) {
-                ceil += 30;
+                ceil += 100;
             }
 
             if (t > floor && t < ceil) {
@@ -335,5 +336,63 @@ public class Tank {
         return null;
     }
 
+
+    /**
+     * 检测是否有坦克穿越;
+     *
+     * @param other
+     * @return
+     */
+    public boolean willPassTank(Tank other) {
+        return (this == other ? false : this.newTankRect().intersects(other.newTankRect()));
+    }
+
+
+    public Rectangle newTankRect() {
+        int newX = this.x + this.xv;
+        int newY = this.y + this.yv;
+        return new Rectangle(newX, newY, this.length, this.width);
+    }
+
+
+    public void stop() {
+        this.xv = this.yv = 0;
+    }
+
+
+    /**
+     * 逆向运动;
+     */
+    public void reverseMove() {
+        this.direction = this.direction.reverseDirection();
+        this.xv = -this.xv;
+        this.yv = -this.yv;
+    }
+
+    /**
+     * 遇到障碍物随机改变动向;
+     */
+    public void randomMoveWhileBlocked() {
+        int t = Constants.RANDOM.nextInt(300);
+        if (t < 50) {
+            this.xv = -Constants.TANK_XV;
+            this.yv = 0;
+            this.direction = Direction.LEFT;
+        } else if (t < 100) {
+            this.xv = 0;
+            this.yv = -Constants.TANK_YV;
+            this.direction = Direction.UPPER;
+        } else if (t < 150) {
+            this.xv = Constants.TANK_XV;
+            this.yv = 0;
+            this.direction = Direction.RIGHT;
+        } else if (t < 200) {
+            this.xv = 0;
+            this.yv = Constants.TANK_YV;
+            this.direction = Direction.BOTTOM;
+        } else {
+            this.xv = this.yv = 0;
+        }
+    }
 
 }
