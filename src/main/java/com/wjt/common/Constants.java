@@ -69,7 +69,7 @@ public interface Constants {
     /**
      * 击中一个敌人增加、减少的分数;
      */
-    int HIT_ADD_SCORE = 5;
+    int HIT_ADD_SCORE = 1;
     int HIT_SUB_SCORE = 10;
 
     /**
@@ -77,7 +77,7 @@ public interface Constants {
      */
     int PLAYER_SCORE = 60;
 
-    int ENEMY_SCORE = 30;
+    int ENEMY_SCORE = 50;
 
 
     /**

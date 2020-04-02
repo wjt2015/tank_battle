@@ -224,6 +224,8 @@ public class TankClient extends JFrame implements Runnable {
         new Wall(400, 400, 300, 10, this.WALL_CONTAINER);
         new Wall(200, 400, 10, 200, this.WALL_CONTAINER);
         new Wall(300, 600, 10, 200, this.WALL_CONTAINER);
+        new Wall(300, 750, 300, 10, this.WALL_CONTAINER);
+        new Wall(300, 820, 300, 10, this.WALL_CONTAINER);
 
         setVisible(true);
     }
@@ -240,6 +242,14 @@ public class TankClient extends JFrame implements Runnable {
         //炮击墙检测;
         hitWalls();
 
+        //敌人坦克改变速度;
+        this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
+            enemyTank.setSpeed();
+        });
+
+        //坦克穿越检测;
+        //stopTankPassThrough();
+
         //移动玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
             //先执行撞墙检测;
@@ -250,7 +260,6 @@ public class TankClient extends JFrame implements Runnable {
 
         //移动敌人的坦克;
         this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
-            enemyTank.setSpeed();
             //先执行撞墙检测;
             if (enemyTank.mayHitWalls(this.WALL_CONTAINER.keySet()) == null) {
                 enemyTank.move();
@@ -285,7 +294,7 @@ public class TankClient extends JFrame implements Runnable {
         final long start = System.currentTimeMillis();
         int n = 0, x = Constants.INIT_X, y = Constants.INIT_Y + 200;
         if (TANK_CONTAINER.enemyTanks.keySet().size() > 5) {
-            n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
+            n = Math.abs(Constants.RANDOM.nextInt()) % 3 + 1;
         } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 3) {
             n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
         } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 1) {
@@ -296,13 +305,13 @@ public class TankClient extends JFrame implements Runnable {
 
         //最大的坦克产量限制;
         n = (n <= enemyCount ? n : enemyCount);
-        //n = 1;
+
         for (int i = 0; i < n; i++) {
             if (x >= X2) {
                 x = Constants.INIT_X;
                 y += (Constants.TANK_LENGTH << 1);
             } else {
-                x += Constants.TANK_LENGTH;
+                x += Constants.TANK_LENGTH << 1;
             }
             new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
         }
@@ -431,6 +440,35 @@ public class TankClient extends JFrame implements Runnable {
 
     public boolean checkGameEnd() {
         return this.TANK_CONTAINER.isEmpty() && enemyCount <= 0;
+    }
+
+    /**
+     * 阻止坦克穿越;
+     */
+    public void stopTankPassThrough() {
+        this.TANK_CONTAINER.playerTanks.keySet().forEach(playerTank1 -> {
+            this.TANK_CONTAINER.playerTanks.keySet().forEach(playerTank2 -> {
+                if (playerTank1.willPassTank(playerTank2)) {
+                    playerTank1.stop();
+                    playerTank2.stop();
+                }
+            });
+            this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank -> {
+                if (playerTank1.willPassTank(enemyTank)) {
+                    playerTank1.stop();
+                    enemyTank.stop();
+                }
+            });
+        });
+
+        this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank1 -> {
+            this.TANK_CONTAINER.enemyTanks.keySet().forEach(enemyTank2 -> {
+                if (enemyTank1.willPassTank(enemyTank2)) {
+                    enemyTank1.stop();
+                    enemyTank2.stop();
+                }
+            });
+        });
     }
 
 }

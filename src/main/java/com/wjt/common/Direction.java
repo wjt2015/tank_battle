@@ -40,4 +40,15 @@ public enum Direction {
         return CODE_MAP_DIR.get(code);
     }
 
+
+    public Direction reverseDirection() {
+        if (this.code >= 1 && this.code <= 4) {
+            return codeOf(this.code + 4);
+        } else if (this.code >= 5 && this.code <= 8) {
+            return codeOf(this.code - 4);
+        } else {
+            return this;
+        }
+    }
+
 }
