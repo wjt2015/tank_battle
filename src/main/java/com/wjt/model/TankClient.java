@@ -283,7 +283,7 @@ public class TankClient extends JFrame implements Runnable {
             return;
         }
         final long start = System.currentTimeMillis();
-        int n = 0, x = Constants.INIT_X, y = Constants.INIT_Y + 200;
+        int n = 0, x = Constants.INIT_X + 200, y = Constants.INIT_Y + 500;
         if (TANK_CONTAINER.enemyTanks.keySet().size() > 5) {
             n = Math.abs(Constants.RANDOM.nextInt()) % 5 + 1;
         } else if (TANK_CONTAINER.enemyTanks.keySet().size() > 3) {

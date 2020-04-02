@@ -121,20 +121,20 @@ public class Missile {
         if (this.TANK == objTank) {
             return false;
         } else {
-            Rectangle missileRect = new Rectangle(x, y, Constants.MISSILE_LENGTH, Constants.MISSILE_WIDTH);
+            Rectangle missileRect = couldBombRect();
             Rectangle objRect = new Rectangle(objTank.x, objTank.y, objTank.length, objTank.width);
-            boolean hit = (!missileRect.intersection(objRect).isEmpty());
-            log.info("missileRect={};objRect={};hit={};", missileRect, objRect, hit);
-            if (hit) {
+            Rectangle intersectionRect = missileRect.intersection(objRect);
+            if (intersectionRect != null) {
                 /**
                  * 击中坦克;
                  * 爆炸;
                  *  发出该炮弹的坦克加分;
                  *  被击中的坦克减分;
                  *  炮弹消失;
+                 *  爆炸中心位置在交互区域的中心;
                  */
 
-                new Bomb(this.x + (this.length >> 1), this.y + (this.width >> 1), this);
+                new Bomb(intersectionRect.x + (intersectionRect.width >> 1), intersectionRect.y + (intersectionRect.height >> 1), this);
 
                 if (this.TANK.playerType != PlayerType.PLAYER_D) {
                     this.TANK.addScore();
@@ -155,18 +155,29 @@ public class Missile {
      * @return
      */
     public boolean hitWall(Wall wall) {
-        Rectangle missileRect = new Rectangle(x, y, Constants.MISSILE_LENGTH, Constants.MISSILE_WIDTH);
-        if (missileRect.intersects(wall.bombRect)) {
+        Rectangle intersectionRect = couldBombRect().intersection(wall.rect);
+        if (intersectionRect != null) {
             /**
-             * 撞墙爆炸;墙受损,炮弹消失;
+             * 撞墙爆炸;墙受损;炮弹消失;爆炸中心位置在交互区域的中心;
              */
-            new Bomb(this.x + (this.length >> 1), this.y + (this.width >> 1), this);
+            new Bomb(intersectionRect.x + (intersectionRect.width >> 1), intersectionRect.y + (intersectionRect.height >> 1), this);
             wall.destroy();
             destroy();
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * 炮弹可爆炸的区域;
+     *
+     * @return
+     */
+    public Rectangle couldBombRect() {
+        int newX = (this.xv < 0 ? (this.x + this.xv) : this.x);
+        int newY = (this.yv < 0 ? (this.y + this.yv) : this.y);
+        return new Rectangle(newX, newY, Constants.MISSILE_LENGTH + Math.abs(this.xv), Constants.MISSILE_WIDTH + Math.abs(this.yv));
     }
 
 

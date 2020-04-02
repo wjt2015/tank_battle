@@ -4,6 +4,7 @@ import com.wjt.common.Constants;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 
 /**
  * @Time 2020/4/1/22:34
@@ -51,6 +52,7 @@ public class Bomb {
     public void destroy() {
         this.MISSILE.TANK.BOMB_CONTAINER.remove(this);
     }
+
 
 
 }

@@ -69,13 +69,13 @@ public interface Constants {
     /**
      * 击中一个敌人增加、减少的分数;
      */
-    int HIT_ADD_SCORE = 5;
-    int HIT_SUB_SCORE = 10;
+    int HIT_ADD_SCORE = 3;
+    int HIT_SUB_SCORE = 5;
 
     /**
      * 玩家、敌人坦克的初始分数;
      */
-    int PLAYER_SCORE = 60;
+    int PLAYER_SCORE = 200;
 
     int ENEMY_SCORE = 30;
 
