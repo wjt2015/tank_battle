@@ -46,8 +46,8 @@ public class Missile {
         this.rect = rect;
 
 
-        //log.info("missilePos=({},{});this.missiles={};direction={};this.RECT={};", this.x, this.y, this.TANK.MISSILES, direction, this.rect);
-        log.info("TANK.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.RECT={};",
+        //log.info("missilePos=({},{});this.missiles={};direction={};this.GAME_RECT={};", this.x, this.y, this.TANK.MISSILES, direction, this.rect);
+        log.info("TANK.playerType={};missilePos=({},{});this.missiles.size={};direction={};this.GAME_RECT={};",
                 tank.playerType, this.x, this.y, this.TANK.MISSILES.size(), direction, this.rect);
         //addMissileDestroyListener(missileDestroyListener);
     }

@@ -335,6 +335,18 @@ public class Tank {
     }
 
 
+    public boolean hitBlood(Blood blood) {
+        if (nowTankRect().intersects(blood.getRect())) {
+            //坦克吃掉血块;
+            this.score += blood.score;
+            blood.destroy();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
     /**
      * 检测是否有坦克穿越;
      *
@@ -345,6 +357,9 @@ public class Tank {
         return (this == other ? false : this.newTankRect().intersects(other.newTankRect()));
     }
 
+    public Rectangle nowTankRect() {
+        return new Rectangle(x, y, this.length, this.width);
+    }
 
     public Rectangle newTankRect() {
         int newX = this.x + this.xv;
