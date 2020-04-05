@@ -34,9 +34,9 @@ public class TankClient extends JFrame implements Runnable {
     /**
      * 游戏区域边界;
      */
-    public final Rectangle RECT = new Rectangle(0 + d, 0 + d, width - 2 * d, height - 2 * d);
+    public final Rectangle GAME_RECT = new Rectangle(0 + d, 0 + d, width - 2 * d, height - 2 * d);
 
-    public final int X1 = RECT.x, Y1 = RECT.y, X2 = RECT.x + RECT.width, Y2 = RECT.y + RECT.height;
+    public final int X1 = GAME_RECT.x, Y1 = GAME_RECT.y, X2 = GAME_RECT.x + GAME_RECT.width, Y2 = GAME_RECT.y + GAME_RECT.height;
     /**
      * 双缓冲用的虚拟图片;
      */
@@ -67,24 +67,37 @@ public class TankClient extends JFrame implements Runnable {
      */
     public volatile int enemyCount = 50;
 
+    /**
+     * 当前可用的血块容器;
+     */
+    public final ConcurrentHashMap<Blood, Object> BLOOD_CONTAINER = new ConcurrentHashMap<>();
+
     private void paintOffScreen() {
 
-        if (checkGameEnd()) {
+/*        if (checkGameEnd()) {
             return;
-        }
+        }*/
         Graphics2D g2d = (Graphics2D) (OFF_SCREEN.getGraphics());
         g2d.setBackground(Color.GREEN);
         g2d.clearRect(0, 0, width, height);
 
-        if (checkGameWin(g2d)) {
+        checkGameWin(g2d);
+/*        if (checkGameWin(g2d)) {
             this.TANK_CONTAINER.clear();
             return;
-        }
+        }*/
 
-        if (checkGameOver(g2d)) {
+        checkGameOver(g2d);
+/*        if (checkGameOver(g2d)) {
             this.TANK_CONTAINER.clear();
             return;
-        }
+        }*/
+
+        //绘制血块;
+        BLOOD_CONTAINER.keySet().forEach(blood -> {
+            blood.draw(g2d);
+        });
+
         //绘制玩家的坦克;
         TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
             playerTank.draw(g2d);
@@ -177,6 +190,11 @@ public class TankClient extends JFrame implements Runnable {
                 TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
                     playerTank.keyPressed(e);
                 });
+
+                if (TANK_CONTAINER.playerTanks.size() == 0 && e.getKeyCode() == KeyEvent.VK_1) {
+                    //新增一个玩家坦克;
+                    new Tank(GAME_RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES, BOMB_CONTAINER);
+                }
             }
 
             @Override
@@ -217,7 +235,7 @@ public class TankClient extends JFrame implements Runnable {
         });
 
         //玩家坦克;
-        new Tank(RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
+        new Tank(GAME_RECT, PlayerType.PLAYER_A, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
 
         //墙;
         new Wall(200, 200, 200, 10, this.WALL_CONTAINER);
@@ -233,6 +251,23 @@ public class TankClient extends JFrame implements Runnable {
     @Override
     public void run() {
         final long start = System.currentTimeMillis();
+        //血块出现;
+        bloodAppear();
+
+        //坦克吃掉血块;
+        TANK_CONTAINER.playerTanks.keySet().forEach(playerTank -> {
+            BLOOD_CONTAINER.keySet().forEach(blood -> {
+                playerTank.hitBlood(blood);
+            });
+        });
+
+        //血块移动;
+        BLOOD_CONTAINER.keySet().forEach(blood -> {
+            blood.proceed();
+            blood.move();
+        });
+
+
         //生产敌人坦克;
         buildEnemyTank();
         //敌人坦克发射炮弹;
@@ -313,7 +348,7 @@ public class TankClient extends JFrame implements Runnable {
             } else {
                 x += Constants.TANK_LENGTH << 1;
             }
-            new Tank(x, y, this.RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
+            new Tank(x, y, this.GAME_RECT, PlayerType.PLAYER_D, TANK_CONTAINER, MISSILES, this.BOMB_CONTAINER);
         }
         this.enemyCount -= n;
         final long elapsed = System.currentTimeMillis() - start;
@@ -470,5 +505,24 @@ public class TankClient extends JFrame implements Runnable {
             });
         });
     }
+
+    /**
+     * 剩余的血块数量;
+     */
+    public volatile int leftBloodCount = 10;
+
+    /**
+     * 血块随机出现;
+     */
+    public void bloodAppear() {
+        final int t = Constants.RANDOM.nextInt(600);
+        if (this.leftBloodCount >= 1 && t > 100 && t < 230 && BLOOD_CONTAINER.size() < 3) {
+            this.leftBloodCount--;
+            final int idx = t % Constants.BLOOD_INIT_POS.length;
+            new Blood(Constants.BLOOD_INIT_POS[idx][0], Constants.BLOOD_INIT_POS[idx][1], this.BLOOD_CONTAINER, GAME_RECT);
+            log.info("test;new blood;this.BLOOD_CONTAINER.size={};", this.BLOOD_CONTAINER.size());
+        }
+    }
+
 
 }
